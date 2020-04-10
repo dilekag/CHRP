@@ -1,0 +1,104 @@
+
+This is going to be an attempt to better understand the difference in time between "peak" cases and "peak" deaths. 
+The rate of deaths is not going to depend on how long a test's results take. 
+However, there will be a lag of time between when a test is administered and when its results are recieved. 
+We will visualize and model the difference between these two across different locations in the United States to see if there are 
+differences and to determine whether or not this lag can be quantified. 
+In addition to these visualizations, we will create confidence intervals to see the differences between county/ state data 
+on the deaths versus case data.   
+
+```{r Data}
+setwd("C:/Users/Dilek/D2K Covid-19")
+cases <- read.csv("Confirmed Cases.csv")
+deaths <- read.csv("Deaths.csv")
+AL_cases <- subset(cases,Province_State == "Alabama",select= X3.8.2020:X4.8.2020)
+AL_deaths <- subset(deaths,Province_State == "Alabama",select=X3.8.2020:X4.8.2020)
+CT_cases <- subset(cases,Province_State == "Connecticut",select=X3.8.2020:X4.8.2020)
+CT_deaths <- subset(deaths,Province_State == "Connecticut",select=X3.8.2020:X4.8.2020)
+NY_cases <- subset(cases,Province_State == "New York",select=X3.8.2020:X4.8.2020)
+NY_deaths <- subset(deaths,Province_State == "New York",select=X3.8.2020:X4.8.2020)
+TX_cases <- subset(cases,Province_State == "Texas",select=X3.8.2020:X4.8.2020)
+TX_deaths <- subset(deaths,Province_State == "Texas",select=X3.8.2020:X4.8.2020)
+```
+
+```{r State County Data Plots}
+per_county <- function(n,data){ 
+  # n is n'th row of the data that corresponds to the n'th county
+  # Data contains number of cases/ deaths per day
+  a <- c()
+  b <- c()
+  count = 1
+  for (num in data[n,]){
+    a <- append(a, count)
+    b <- append(b, num)
+    count = count + 1
+  }
+  return(list("days"=a,"numbers"=b))
+}
+per_state <- function(data){
+  n <- min(100,nrow(data)) #Don't want to overload R with data
+  x <- c()
+  y <- c() 
+  for (i in 1:n){
+    lst <- per_county(i,data)
+    days <- lst$days
+    numbers <- lst$numbers
+    x <- append(x,days)
+    y <- append(y,numbers)
+  }
+  plot(x,y,main=deparse(substitute(data)))
+}
+  
+per_state(CT_cases)
+per_state(CT_deaths)
+per_state(NY_cases)
+per_state(NY_deaths)
+per_state(AL_cases)
+per_state(AL_deaths)
+per_state(TX_cases)
+per_state(TX_deaths)
+
+```
+
+```{r Specific County Comparisons}
+# New York, New York 
+dat <- per_county(31, NY_cases)
+plot(dat$days,dat$numbers)
+dat <- per_county(31, NY_deaths)
+plot(dat$days,dat$numbers)
+
+# Westchester, New York
+dat <- per_county(60,NY_cases)
+plot(dat$days,dat$numbers)
+dat <- per_county(60, NY_deaths)
+plot(dat$days,dat$numbers)
+
+```
+
+```{r Total State Comparisons}
+state_comp <- function(data){
+  x <- c()
+  y <- c()
+  count = 1
+  for (i in 1:ncol(data)){
+    y <- append(y,sum(data[,i]))
+    x <- append(x,count)
+    count = count + 1
+  }
+  plot(x,y,main=deparse(substitute(data)))
+}
+state_comp(CT_cases)
+state_comp(CT_deaths)
+state_comp(TX_cases)
+state_comp(TX_deaths)
+state_comp(AL_cases)
+state_comp(AL_deaths)
+state_comp(NY_cases)
+state_comp(NY_deaths)
+```
+
+-- Maybe calculate derivatives at each point and see how the cases derivatives compare to the deaths derivatives to potentially quantify "lag". 
+-- Clear differences between states - potentially due to their different stages within the disease ? Maybe due to resources? 
+I.e. Texas has a lot more resources given the rate of disease there versus Connecticut 
+-- Match w/ Kinder Institue or other county-specific data to determine if a way to make data more uniform throughout 
+(i.e. getting cases ber 1,000 people, taking into account weather, etc.)
